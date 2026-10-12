@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>noSZONe.pl – bielizna z drugiej ręki</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#ffffff;--bg2:#fbf3f5;--card:#ffffff;--tx:#2a1218;--mu:#7d6368;--ac:#d6336c;--ac2:#b07a4f;--bd:#f0dde2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root:not([data-theme="light"]){color-scheme:light}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:radial-gradient(900px 500px at 80% -10%,#fde4ea 0,transparent 60%),var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+h1,h2,h3,.logo{font-family:Georgia,"Playfair Display","Times New Roman",serif;font-weight:600}
+#app{transition:filter .4s}body.locked #app{filter:blur(22px);pointer-events:none;user-select:none;height:100vh;overflow:hidden}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:12px;align-items:center;padding:12px 5%;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--bd)}
+.logo{font-size:24px;color:var(--tx);letter-spacing:.5px;white-space:nowrap}.logo b{color:var(--ac)}
+.search{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--bd);color:var(--tx);padding:10px 16px;border-radius:99px;font-size:15px}
+button{font:inherit;cursor:pointer}
+.btn{background:linear-gradient(135deg,var(--ac),#a8244a);color:#fff;border:0;padding:10px 20px;border-radius:99px;font-weight:600;box-shadow:0 6px 24px #e0476b44;white-space:nowrap}
+.btn.ghost{background:transparent;border:1px solid var(--bd);box-shadow:none;color:var(--tx)}
+.hero{padding:64px 5% 40px;text-align:center;max-width:900px;margin:auto}
+.hero h1{font-size:clamp(34px,6vw,60px);line-height:1.1}.hero h1 em{color:var(--ac);font-style:italic}
+.hero p{color:var(--mu);margin:16px auto 26px;max-width:560px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 5% 16px;scrollbar-width:none}
+.chip{background:var(--bg2);border:1px solid var(--bd);color:var(--tx);padding:8px 16px;border-radius:99px;white-space:nowrap}
+.chip.on{background:var(--ac);border-color:var(--ac);color:#fff}.chip.worn{border-color:var(--ac2);color:var(--ac2)}.chip.worn.on{background:var(--ac2);color:#fff}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:0 5% 12px;color:var(--mu);font-size:14px}
+select{background:var(--bg2);color:var(--tx);border:1px solid var(--bd);padding:6px 10px;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;padding:0 5% 60px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.card:hover{transform:translateY(-4px);box-shadow:0 14px 34px #e0476b33}
+.ph{aspect-ratio:4/5;background:linear-gradient(160deg,#fbd5de,#f6e9ec);display:flex;align-items:center;justify-content:center;font-size:54px;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover}
+.info{padding:12px 14px}.info h3{font-size:16px;font-family:inherit;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{color:var(--mu);font-size:13px}.price{color:var(--ac2);font-weight:700;font-size:18px;margin-top:4px}
+.tag{position:absolute;top:10px;left:10px;background:var(--ac2);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase}
+.fav{position:absolute;top:8px;right:8px;background:#fffd;border:0;color:#c9b3b8;box-shadow:0 2px 8px #0002;width:34px;height:34px;border-radius:50%;font-size:16px}.fav.on{color:var(--ac)}
+.empty{grid-column:1/-1;text-align:center;color:var(--mu);padding:60px 0}
+.modal{position:fixed;inset:0;background:rgba(60,15,30,.5);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.modal.open{display:flex}
+.box{background:var(--bg2);border:1px solid var(--bd);border-radius:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:24px;position:relative}
+.box .x{position:absolute;right:14px;top:10px;background:none;border:0;color:var(--mu);font-size:26px}
+label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
+input,textarea,select.f{width:100%;background:var(--card);border:1px solid var(--bd);color:var(--tx);padding:10px 12px;border-radius:10px;font:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mu);margin-top:12px}.chk input{width:auto;margin-top:4px}
+.warn{background:#e0476b1f;border:1px solid var(--ac);border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px;display:none}
+#gate{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px;background:#ffffff55}
+body.locked #gate{display:flex}
+.gbox{background:linear-gradient(160deg,#ffffff,#fdeef2);border:1px solid var(--ac);border-radius:24px;max-width:440px;padding:36px 28px;text-align:center;box-shadow:0 0 80px #e0476b55}
+.gbox .big{font-size:56px;font-weight:700;color:var(--ac);font-family:Georgia,serif}
+.gbox p{color:var(--mu);margin:12px 0 22px;font-size:14px}
+.gbox .btn{display:block;width:100%;margin-top:10px;padding:13px}
+footer{border-top:1px solid var(--bd);padding:30px 5%;color:var(--mu);font-size:13px;text-align:center}
+#toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:10px 20px;border-radius:99px;display:none;z-index:60}
+@media(max-width:560px){.logo{font-size:19px}.btn{padding:9px 14px;font-size:14px}.row{grid-template-columns:1fr}}
+header{flex-wrap:wrap}
+.cv{padding:10px 12px;border-bottom:1px solid var(--bd);cursor:pointer}.cv.on{background:var(--card)}
+.chatbox{display:grid;grid-template-columns:210px 1fr;height:68vh;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+#cList{overflow:auto;border-right:1px solid var(--bd)}.th{display:flex;flex-direction:column;min-height:0}
+#cMsgs{flex:1;overflow:auto;padding:10px}.mg{max-width:80%;padding:8px 12px;border-radius:14px;background:var(--card);border:1px solid var(--bd);margin:6px 0;white-space:pre-wrap;word-break:break-word}
+.mg.me{margin-left:auto;background:var(--ac);color:#fff;border-color:var(--ac)}
+.cin{display:none;gap:8px;padding:10px;border-top:1px solid var(--bd)}
+.my{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
+.pk{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--bd);border-radius:12px;margin-top:8px}
+@media(max-width:560px){.chatbox{grid-template-columns:1fr;grid-template-rows:120px 1fr}#cList{border-right:0;border-bottom:1px solid var(--bd)}}
+</style></head>
+<body class="locked">
+<div id="gate"><div class="gbox"><div class="big">18+</div><h2>Treści dla dorosłych</h2>
+<p>noSZONe.pl zawiera bieliznę damską, w tym kategorię „Noszone”. Wstęp mają wyłącznie osoby pełnoletnie. Klikając „Mam 18 lat” potwierdzasz, że jesteś pełnoletnia/pełnoletni i akceptujesz regulamin.</p>
+<button class="btn" id="yes">Mam ukończone 18 lat – wchodzę</button>
+<button class="btn ghost" id="no">Nie mam 18 lat – wyjdź</button></div></div>
+
+<div id="app">
+<header><div class="logo">noSZONe.pl</div>
+<input class="search" id="q" placeholder="Szukaj: koronka, stringi, body…">
+<button class="btn ghost" id="myBtn">Moje oferty</button><button class="btn ghost" id="msgBtn">Wiadomości</button><button class="btn ghost" id="acct">Zaloguj / Załóż konto</button><button class="btn" id="sell">+ Sprzedaj</button></header>
+<section class="hero"><h1>Bielizna, która <em>uwodzi</em>.<br>Sprzedaj. Kup. Zarób.</h1>
+<p>Nowoczesny market bielizny od kobiet dla kobiet. Znajdź wyjątkowe komplety, body i koronki – lub wystaw własne.</p>
+<button class="btn" onclick="document.getElementById('list').scrollIntoView({behavior:'smooth'})">Przeglądaj ofertę</button></section>
+<div class="chips" id="chips"></div>
+<div class="bar"><span id="count"></span><select id="sort"><option value="new">Najnowsze</option><option value="asc">Cena rosnąco</option><option value="desc">Cena malejąco</option></select></div>
+<div class="grid" id="list"></div>
+<footer>© 2026 Kpdesign.pl  Serwis wyłącznie dla osób 18+ · <a href="#" class="tl" style="color:var(--ac)">Regulamin</a> · Polityka prywatności · Zgłoś nadużycie</footer>
+</div>
+
+<div class="modal" id="mSell"><div class="box"><button class="x" data-close>×</button>
+<h2>Wystaw przedmiot</h2>
+<label>Tytuł</label><input id="fT" maxlength="70" placeholder="np. Koronkowy komplet czarny">
+<div class="row"><div><label>Kategoria</label><select class="f" id="fC"></select></div><div><label>Cena (zł)</label><input id="fP" type="number" min="1" step="1"></div></div>
+<div class="row"><div><label>Rozmiar</label><input id="fS" placeholder="np. 75B / M"></div><div><label>Stan</label><select class="f" id="fQ"><option>Nowe z metką</option><option>Nowe bez metki</option><option>Bardzo dobry</option><option>Dobry</option></select></div></div>
+<label>Sposób wysyłki i kto płaci</label><select class="f" id="fH"><option>Paczkomat – płaci kupująca</option><option>Paczkomat – płaci sprzedająca</option><option>Kurier – płaci kupująca</option><option>Kurier – płaci sprzedająca</option><option>Odbiór osobisty</option><option>Do ustalenia w rozmowie</option></select>
+<label>Opis</label><textarea id="fD" rows="3" maxlength="600"></textarea>
+<label>Zdjęcie (bez twarzy, bez nagości)</label><input type="file" id="fF" accept="image/*">
+<label>Twój pseudonim i kontakt dla kupującej</label><input id="fK" maxlength="80" placeholder="np. Kasia – kasia@mail.pl">
+<label>Twój link do płatności (PayPal.me, Revolut.me, Stripe Payment Link, BLIK/Przelewy24 link)</label><input id="fL" maxlength="300" placeholder="https://paypal.me/twojanazwa"><p class="meta" style="font-size:12px;margin-top:4px">Kupująca płaci prosto na Twoje konto. Nigdy nie wpisuj tu numeru karty ani hasła.</p>
+<div class="warn" id="wW">Kategoria „Noszone”: zaznacz poniżej, że rozumiesz zasady (pranie/higiena, pełnoletność, brak zdjęć z osobami poniżej 18 lat).</div>
+<label class="chk"><input type="checkbox" id="fA"><span>Potwierdzam, że mam ukończone 18 lat i jestem właścicielką przedmiotu.</span></label>
+<label class="chk" id="wC" style="display:none"><input type="checkbox" id="fN"><span>Oświadczam, że przedmiot jest noszony, a opis jest prawdziwy. Sprzedaż noszonej bielizny odbywa się na moją odpowiedzialność.</span></label>
+<button class="btn" id="save" style="width:100%;margin-top:18px;padding:13px">Opublikuj ogłoszenie</button></div></div>
+
+<div class="modal" id="mMy"><div class="box"><button class="x" data-close>×</button><h2>Moje oferty</h2>
+<p id="myQ" class="meta" style="margin:8px 0"></p><div id="myList"></div>
+<h3 style="margin-top:18px">Pakiety sprzedaży</h3><div id="pks"></div>
+<p class="meta" style="font-size:12px;margin-top:10px">Pakiet dodaje kolejne sprzedaże. Po opłaceniu aktywujemy go na Twoim koncie.</p></div></div>
+<div class="modal" id="mChat"><div class="box" style="max-width:820px"><button class="x" data-close>×</button><h2 style="margin-bottom:10px">Wiadomości</h2><p class="meta" style="font-size:12px;margin-bottom:8px;background:var(--bg2);padding:8px 10px;border-radius:8px">⚠️ Nie podawaj pełnego adresu ani telefonu, zanim ustalicie szczegóły. Płać metodą z ochroną kupującego (np. PayPal „towary i usługi”). Serwis nie pośredniczy w sprzedaży.</p>
+<div class="chatbox"><div id="cList"></div><div class="th"><div id="cBar" style="display:none;gap:8px;padding:8px 10px;border-bottom:1px solid var(--bd);flex-wrap:wrap"></div><div id="cMsgs"><p class="meta" style="padding:12px">Wybierz rozmowę.</p></div>
+<div class="cin" id="cIn"><input id="cTx" maxlength="2000" placeholder="Napisz wiadomość…"><button class="btn" id="cSend">Wyślij</button></div></div></div></div></div>
+<div class="modal" id="mAuth"><div class="box" style="max-width:420px"><button class="x" data-close>×</button>
+<h2 id="aT">Zaloguj się</h2>
+<div id="aReg" style="display:none"><label>Pseudonim (widoczny publicznie)</label><input id="aU" maxlength="30" autocomplete="nickname"></div>
+<label>E-mail</label><input id="aE" type="email" autocomplete="email">
+<label>Hasło (min. 8 znaków)</label><input id="aP" type="password" autocomplete="current-password">
+<label class="chk" id="aAgeW" style="display:none"><input type="checkbox" id="aAge"><span>Mam ukończone 18 lat i akceptuję regulamin oraz politykę prywatności.</span></label>
+<button class="btn" id="aGo" style="width:100%;margin-top:18px;padding:13px">Zaloguj</button>
+<p class="meta" id="aSw" style="text-align:center;margin-top:14px;cursor:pointer;text-decoration:underline"></p></div></div>
+<div class="modal" id="mView"><div class="box" id="vBox"></div></div>
+<div class="modal" id="mAck"><div class="box" style="max-width:460px"><h2 id="aTt"></h2><p id="aTx" style="margin:12px 0;color:var(--mu);font-size:14px"></p>
+<label class="chk"><input type="checkbox" id="aOk"><span>Przeczytałam/em i akceptuję <a href="#" class="tl" style="color:var(--ac)">regulamin</a>.</span></label>
+<button class="btn" id="aGoOk" style="width:100%;margin-top:16px;padding:12px">Rozumiem, kontynuuj</button>
+<button class="btn ghost" id="aNo" style="width:100%;margin-top:8px;padding:12px">Anuluj</button></div></div>
+<div class="modal" id="mTerms"><div class="box" style="max-width:680px;font-size:14px"><button class="x" id="tX">×</button><h2>Regulamin serwisu Velvet Market</h2>
+<p class="meta">Wersja robocza – uzupełnij dane operatora i zleć weryfikację prawnikowi przed publikacją.</p>
+<h3 style="margin-top:14px">1. Postanowienia ogólne</h3><p>Serwis prowadzi. Noszone jest wyłącznie platformą ogłoszeniową, która umożliwia użytkownikom zamieszczanie ogłoszeń i kontakt między sobą. Serwis jest przeznaczony wyłącznie dla osób, które ukończyły 18 lat.</p>
+<h3 style="margin-top:14px">2. Brak pośrednictwa w sprzedaży</h3><p><b>Operator nie pośredniczy w sprzedaży</b> i nie jest stroną umów zawieranych między użytkownikami. Operator nie przyjmuje ani nie przechowuje płatności, nie organizuje i nie odpowiada za wysyłkę, nie weryfikuje stanu, jakości, legalności ani autentyczności towarów oraz nie rozstrzyga sporów między użytkownikami. Użytkownicy ustalają warunki, płatność i dostawę samodzielnie i na własną odpowiedzialność. Zalecamy płatności z ochroną kupującego oraz niepodawanie pełnych danych osobowych przed ustaleniem szczegółów.</p>
+<h3 style="margin-top:14px">3. Konta</h3><p>Warunkiem założenia konta jest ukończenie 18 lat i podanie prawdziwych danych. Użytkownik odpowiada za bezpieczeństwo hasła. Operator może zablokować lub usunąć konto naruszające regulamin.</p>
+<h3 style="margin-top:14px">4. Zasady ogłoszeń</h3><p>Zabronione są: treści z udziałem osób poniżej 18 lat, nagość i treści pornograficzne, wizerunek osób bez ich zgody, oferowanie usług seksualnych, treści nielegalne lub naruszające prawa osób trzecich oraz fałszywe opisy. Zdjęcia nie mogą przedstawiać twarzy sprzedającej. Przedmioty z kategorii „Noszone” muszą być wyraźnie oznaczone, a ich opis zgodny z prawdą; sprzedająca odpowiada za ich stan higieniczny.</p>
+<h3 style="margin-top:14px">5. Pakiety sprzedaży</h3><p>Pierwsza sprzedaż na koncie jest bezpłatna. Kolejne wymagają wykupienia pakietu. Za sprzedaż uznaje się ofertę oznaczoną przez sprzedającą jako sprzedaną lub potwierdzoną przez kupującą. Ceny i zasady pakietów są podane w serwisie; płatności za pakiety nie podlegają zwrotowi, o ile przepisy prawa nie stanowią inaczej.</p>
+<h3 style="margin-top:14px">6. Zgłoszenia i moderacja</h3><p>Użytkownicy mogą zgłaszać ogłoszenia i rozmowy oraz blokować innych użytkowników. Operator może usuwać treści i konta bez uprzedzenia w przypadku naruszeń.</p>
+<h3 style="margin-top:14px">7. Odpowiedzialność i podatki</h3><p>Operator nie odpowiada za działania użytkowników ani za szkody wynikające z transakcji zawieranych między nimi, w granicach dozwolonych prawem. Użytkownicy odpowiadają za własne obowiązki podatkowe wynikające ze sprzedaży.</p>
+<h3 style="margin-top:14px">8. Dane osobowe</h3><p>Administratorem danych jest Operator. Zasady przetwarzania danych opisuje polityka prywatności [DO UZUPEŁNIENIA].</p>
+<h3 style="margin-top:14px">9. Zmiany i kontakt</h3><p>Operator może zmieniać regulamin, informując o tym w serwisie. Kontakt: [E-MAIL].</p></div></div>
+<div id="toast"></div>
+
+<script>
+const CATS=["Majtki","Biustonosze","Komplety","Body i teddy","Erotyczna","Skarpetki","Nocna","Noszone"];
+const ICON={"Majtki":"🩲","Biustonosze":"👙","Komplety":"🖤","Body i teddy":"💋","Erotyczna":"🔥","Sportowa":"🏃‍♀️","Nocna":"🌙","Noszone":"🌹"};
+const $=s=>document.querySelector(s);
+let items=[],cat="Wszystkie",db=null,favs=[];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",2600)}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+// --- 18+ gate
+if(ls("vm18")==="1")document.body.classList.remove("locked");
+$("#yes").onclick=()=>{ls("vm18","1");document.body.classList.remove("locked")};
+$("#no").onclick=()=>{location.href="https://www.google.com"};
+try{favs=JSON.parse(ls("vmfav")||"[]")}catch(e){}
+// --- data
+const SUPABASE_URL="https://ahaijrouzkofzeohqlmd.supabase.co",SUPABASE_KEY="sb_publishable__Qkj26Oa1TIEMFA_c88tbw_H-3eTRHf";
+let sb=null,me=null;
+async function load(){const {data}=await sb.from("listings").select("*").eq("sold",false).order("ts",{ascending:false});items=(data||[]).map(r=>({...r,id:String(r.id),desc:r.descr}));render()}
+async function init(){
+  if(!window.supabase||SUPABASE_URL.startsWith("WKLEJ")){toast("Uzupełnij klucze Supabase w pliku index.html");render();return}
+  sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  sb.auth.onAuthStateChange((_e,ses)=>{me=ses?ses.user:null;authUI()});
+  const {data}=await sb.auth.getSession();me=data.session?data.session.user:null;authUI();
+  await load();sb.channel("l").on("postgres_changes",{event:"*",schema:"public",table:"listings"},load).subscribe()}
+function render(){
+  const q=$("#q").value.toLowerCase().trim(),so=$("#sort").value;
+  let r=items.filter(i=>!i.sold&&(cat==="Wszystkie"||i.cat===cat)&&(!q||(i.title+" "+i.desc+" "+i.cat).toLowerCase().includes(q)));
+  r.sort((a,b)=>so==="asc"?a.price-b.price:so==="desc"?b.price-a.price:(b.ts||0)-(a.ts||0));
+  $("#count").textContent=r.length+" ogłoszeń";
+  $("#list").innerHTML=r.length?r.map(i=>`<div class="card" data-id="${esc(i.id)}"><div class="ph">${i.img?`<img src="${i.img}" alt="">`:ICON[i.cat]||"💗"}</div>${i.cat==="Noszone"?'<span class="tag">Noszone</span>':""}<button class="fav ${favs.includes(i.id)?"on":""}" data-fav="${esc(i.id)}">♥</button><div class="info"><h3>${esc(i.title)}</h3><div class="meta">${esc(i.size)} · ${esc(i.cond)}</div><div class="price">${esc(i.price)} zł</div></div></div>`).join(""):`<div class="empty">Brak ogłoszeń. Bądź pierwsza i wystaw swój przedmiot!</div>`;
+}
+$("#chips").innerHTML=["Wszystkie",...CATS].map(c=>`<button class="chip ${c==="Noszone"?"worn":""} ${c===cat?"on":""}" data-c="${c}">${c==="Noszone"?"🌹 ":""}${c}</button>`).join("");
+$("#chips").onclick=e=>{const c=e.target.dataset.c;if(!c)return;cat=c;document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on",x.dataset.c===c));render()};
+$("#q").oninput=render;$("#sort").onchange=render;
+$("#list").onclick=e=>{
+  const f=e.target.dataset.fav;
+  if(f){e.stopPropagation();favs=favs.includes(f)?favs.filter(x=>x!==f):[...favs,f];ls("vmfav",JSON.stringify(favs));render();return}
+  const c=e.target.closest(".card");if(c)view(c.dataset.id)};
+function view(id){const i=items.find(x=>x.id===id);if(!i)return;
+  $("#vBox").innerHTML=`<button class="x" data-close>×</button><div class="ph" style="border-radius:14px;margin-bottom:14px;max-height:50vh">${i.img?`<img src="${i.img}" alt="">`:ICON[i.cat]||"💗"}</div>${i.cat==="Noszone"?'<span class="tag" style="position:static;display:inline-block;margin-bottom:8px">Noszone – używana bielizna</span>':""}<h2>${esc(i.title)}</h2><div class="price" style="font-size:26px">${esc(i.price)} zł</div><p class="meta" style="margin:6px 0">${esc(i.cat)} · rozmiar ${esc(i.size)} · ${esc(i.cond)}</p><p style="margin:12px 0">${esc(i.desc)||"Brak opisu."}</p><p class="meta">🚚 ${esc(i.ship||"Wysyłka do ustalenia ze sprzedającą")}</p>${/^https:\/\//.test(i.pay||"")?`<button class="btn" id="buy" style="width:100%;margin-bottom:10px;padding:13px">Kup teraz – płatność prosto do sprzedającej</button><p class="meta" style="font-size:12px;margin-bottom:10px;text-align:center">Płacisz bezpośrednio sprzedającej, poza Velvet Market. Serwis nie przechowuje środków ani nie zwraca pieniędzy.</p>`:""}<button class="btn ghost" id="contact" style="width:100%;padding:13px">Napisz do sprzedającej</button><p class="meta" id="cInfo" style="margin-top:10px;text-align:center"><a href="#" id="rep" style="color:var(--mu)">Zgłoś ofertę</a></p>`;
+  $("#contact").onclick=()=>startChat(i);if($("#buy"))$("#buy").onclick=async()=>{if(await ack("buy"))window.open(i.pay,"_blank","noopener,noreferrer")};$("#rep").onclick=async ev=>{ev.preventDefault();if(!me)return openAuth();const r=prompt("Dlaczego zgłaszasz tę ofertę?");if(!r||r.trim().length<3)return;const {error}=await sb.from("reports").insert({listing_id:+i.id,reported_user:i.seller_id,reason:r.trim().slice(0,500)});toast(error?"Nie wysłano zgłoszenia":"Zgłoszenie wysłane")};
+  $("#mView").classList.add("open")}
+document.addEventListener("click",e=>{if(e.target.matches("[data-close]")||e.target.classList.contains("modal"))document.querySelectorAll(".modal").forEach(m=>m.classList.remove("open"))});
+// --- sell
+$("#fC").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
+$("#fC").onchange=()=>{const w=$("#fC").value==="Noszone";$("#wW").style.display=w?"block":"none";$("#wC").style.display=w?"flex":"none"};
+$("#sell").onclick=async()=>{if(!me)return openAuth();const q=await quota();if(!q.ok){openMy();return toast("Limit sprzedaży wykorzystany – wykup pakiet")}$("#mSell").classList.add("open")};
+function shrink(file){return new Promise(res=>{if(!file)return res("");const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.7))};im.onerror=()=>res("");im.src=r.result};r.readAsDataURL(file)})}
+$("#save").onclick=async()=>{
+  const t=$("#fT").value.trim(),p=Math.round(+$("#fP").value);
+  if(!t||!(p>0))return toast("Podaj tytuł i cenę");
+  const L=$("#fL").value.trim();if(L&&!/^https:\/\/[^\s]+$/.test(L))return toast("Link do płatności musi zaczynać się od https://");
+  if(!$("#fA").checked)return toast("Potwierdź pełnoletność");
+  if($("#fC").value==="Noszone"&&!$("#fN").checked)return toast("Zaznacz oświadczenie dla kategorii Noszone");
+  if(!await ack("sell"))return;
+  const img=await shrink($("#fF").files[0]);
+  const it={title:t,price:p,cat:$("#fC").value,size:$("#fS").value.trim()||"–",cond:$("#fQ").value,desc:$("#fD").value.trim(),contact:$("#fK").value.trim(),pay:L,ship:$("#fH").value,img,ts:Date.now(),sold:false};
+  try{
+    if(!me)return openAuth();
+    const {desc,...rest}=it;const {error}=await sb.from("listings").insert({...rest,descr:desc,seller_id:me.id,seller_name:(me.user_metadata&&me.user_metadata.username)||""});if(error)throw error;await load();
+    document.querySelectorAll(".modal").forEach(m=>m.classList.remove("open"));
+    ["#fT","#fP","#fS","#fD","#fK","#fF"].forEach(s=>$(s).value="");$("#fA").checked=$("#fN").checked=false;toast("Ogłoszenie opublikowane ✨")
+  }catch(e){if(e&&e.code==="42501"){closeAll();openMy();toast("Limit sprzedaży wykorzystany – wykup pakiet")}else toast("Nie udało się zapisać (zdjęcie za duże?)")}};
+let mode="login";
+const closeAll=()=>document.querySelectorAll(".modal").forEach(m=>m.classList.remove("open"));
+function authUI(){$("#acct").textContent=me?((me.user_metadata&&me.user_metadata.username)||"Moje konto")+" · Wyloguj":"Zaloguj / Załóż konto"}
+function setMode(m){mode=m;const L=m==="login";$("#aT").textContent=L?"Zaloguj się":"Załóż konto";$("#aReg").style.display=L?"none":"block";$("#aAgeW").style.display=L?"none":"flex";$("#aGo").textContent=L?"Zaloguj":"Utwórz konto";$("#aSw").textContent=L?"Nie masz konta? Zarejestruj się":"Masz już konto? Zaloguj się"}
+function openAuth(){setMode("login");$("#mAuth").classList.add("open")}
+$("#aSw").onclick=()=>setMode(mode==="login"?"reg":"login");
+$("#acct").onclick=async()=>{if(me){await sb.auth.signOut();toast("Wylogowano")}else openAuth()};
+$("#aGo").onclick=async()=>{
+  if(!sb)return toast("Brak połączenia z Supabase");
+  const email=$("#aE").value.trim(),pw=$("#aP").value;
+  if(!email||pw.length<8)return toast("Podaj e-mail i hasło (min. 8 znaków)");
+  if(mode==="login"){const {error}=await sb.auth.signInWithPassword({email,password:pw});if(error)return toast("Błędny e-mail lub hasło");closeAll();return toast("Zalogowano ✨")}
+  const u=$("#aU").value.trim();
+  if(u.length<3)return toast("Pseudonim min. 3 znaki");
+  if(!$("#aAge").checked)return toast("Potwierdź pełnoletność");
+  const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username:u,adult_confirmed:true}}});
+  if(error)return toast(error.message);
+  closeAll();toast(data.session?"Konto utworzone ✨":"Sprawdź e-mail i potwierdź konto")};
+// --- Moje oferty i pakiety
+const PACKAGES=[{n:3,price:"19 zł",link:""},{n:10,price:"49 zł",link:""},{n:30,price:"99 zł",link:""}]; // wklej linki Stripe Payment Link
+async function quota(){const [p,c]=await Promise.all([sb.from("profiles").select("allowed_sales").eq("id",me.id).maybeSingle(),sb.rpc("sales_count",{uid:me.id})]);const allowed=p.data?p.data.allowed_sales:1,sold=c.data||0;return{allowed,sold,ok:sold<allowed}}
+async function openMy(){
+  if(!me)return openAuth();
+  const q=await quota(),{data}=await sb.from("listings").select("*").eq("seller_id",me.id).order("ts",{ascending:false});
+  $("#myQ").innerHTML=`Sprzedane: <b>${q.sold}</b> z dostępnych <b>${q.allowed}</b>.`+(q.ok?"":` <b style="color:var(--ac)">Limit wykorzystany – Twoje aktywne oferty są ukryte, dopóki nie wykupisz pakietu.</b>`);
+  $("#myList").innerHTML=(data||[]).map(i=>`<div class="my"><div><b>${esc(i.title)}</b><div class="meta">${esc(i.price)} zł · ${i.sold?"sprzedane":"aktywne"}</div></div><div>${i.sold?"":`<button class="chip" data-sold="${i.id}">Sprzedane</button> `}<button class="chip" data-del="${i.id}">Usuń</button></div></div>`).join("")||'<p class="meta">Nie masz jeszcze ofert.</p>';
+  $("#pks").innerHTML=PACKAGES.map(p=>`<div class="pk"><span><b>+${p.n} sprzedaży</b> · ${p.price}</span>${p.link?`<a class="btn" style="text-decoration:none" target="_blank" rel="noopener noreferrer" href="${esc(p.link)}?client_reference_id=${me.id}">Kup pakiet</a>`:'<button class="btn ghost" disabled>Wkrótce</button>'}</div>`).join("");
+  $("#mMy").classList.add("open")}
+$("#myBtn").onclick=openMy;
+$("#myList").onclick=async e=>{const b=e.target.closest("[data-sold],[data-del]");if(!b)return;
+  if(b.dataset.sold){if(!confirm("Oznaczyć jako sprzedane? Tego nie można cofnąć."))return;const {error}=await sb.from("listings").update({sold:true}).eq("id",b.dataset.sold);if(error)return toast("Błąd zapisu")}
+  else{if(!confirm("Usunąć ofertę?"))return;await sb.from("listings").delete().eq("id",b.dataset.del)}
+  await load();openMy()};
+// --- Czat
+let convs=[],cur=null,ch=null;
+const uname=()=>(me.user_metadata&&me.user_metadata.username)||"Użytkownik";
+const mh=m=>`<div class="mg ${m.sender_id===me.id?"me":""}">${esc(m.body)}</div>`;
+const down=()=>{const e=$("#cMsgs");e.scrollTop=e.scrollHeight};
+async function startChat(i){
+  if(!me)return openAuth();
+  if(i.seller_id===me.id)return toast("To Twoja oferta");
+  let {data}=await sb.from("conversations").select("*").eq("listing_id",i.id).eq("buyer_id",me.id).maybeSingle();
+  if(!data){const r=await sb.from("conversations").insert({listing_id:+i.id,seller_id:i.seller_id,buyer_name:uname(),seller_name:i.seller_name,listing_title:i.title}).select().single();if(r.error)return toast("Nie można rozpocząć rozmowy");data=r.data}
+  closeAll();openChat(data.id)}
+async function openChat(id){
+  if(!me)return openAuth();
+  $("#mChat").classList.add("open");
+  const {data}=await sb.from("conversations").select("*").order("created_at",{ascending:false});convs=data||[];
+  $("#cList").innerHTML=convs.map(c=>`<div class="cv" data-cv="${c.id}"><b>${esc(c.buyer_id===me.id?c.seller_name:c.buyer_name)}</b><div class="meta">${esc(c.listing_title)}</div></div>`).join("")||'<p class="meta" style="padding:12px">Brak rozmów.</p>';
+  if(id)showConv(+id)}
+async function showConv(id){
+  cur=id;const cv=convs.find(c=>c.id===id)||{},B=$("#cBar");B.style.display="flex";B.innerHTML=(cv.buyer_id===me.id&&!cv.buyer_confirmed?'<button class="chip" id="bBuy">✔ Potwierdzam zakup</button>':'')+'<button class="chip" id="bRep">Zgłoś</button><button class="chip" id="bBlk">Zablokuj</button>';document.querySelectorAll(".cv").forEach(x=>x.classList.toggle("on",+x.dataset.cv===id));
+  const {data}=await sb.from("messages").select("*").eq("conv_id",id).order("created_at");
+  $("#cMsgs").innerHTML=(data||[]).map(mh).join("")||'<p class="meta" style="padding:12px">Napisz pierwszą wiadomość.</p>';$("#cIn").style.display="flex";down();
+  if(ch)sb.removeChannel(ch);
+  ch=sb.channel("m"+id).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"conv_id=eq."+id},p=>{if(p.new.sender_id!==me.id){$("#cMsgs").insertAdjacentHTML("beforeend",mh(p.new));down()}}).subscribe()}
+$("#cList").onclick=e=>{const c=e.target.closest(".cv");if(c)showConv(+c.dataset.cv)};
+async function sendMsg(){const t=$("#cTx").value.trim();if(!t||!cur)return;$("#cTx").value="";
+  const {data,error}=await sb.from("messages").insert({conv_id:cur,body:t}).select().single();
+  if(error)return toast("Nie wysłano");const w=$("#cMsgs");if(!w.querySelector(".mg"))w.innerHTML="";w.insertAdjacentHTML("beforeend",mh(data));down()}
+$("#cSend").onclick=sendMsg;$("#cTx").onkeydown=e=>{if(e.key==="Enter")sendMsg()};
+const other=()=>{const c=convs.find(x=>x.id===cur);return c&&(c.buyer_id===me.id?c.seller_id:c.buyer_id)};
+$("#cBar").onclick=async e=>{const id=e.target.id,o=other();if(!cur||!o)return;
+  if(id==="bRep"){const r=prompt("Opisz problem (np. spam, nękanie, nieletni, oszustwo):");if(!r||r.trim().length<3)return;const {error}=await sb.from("reports").insert({conv_id:cur,reported_user:o,reason:r.trim().slice(0,500)});toast(error?"Nie wysłano zgłoszenia":"Zgłoszenie wysłane")}
+  if(id==="bBlk"){if(!confirm("Zablokować tę osobę? Nie będzie mogła do Ciebie pisać."))return;const {error}=await sb.from("blocks").insert({blocked_id:o});toast(error?"Nie udało się zablokować":"Zablokowano")}
+  if(id==="bBuy"){if(!confirm("Potwierdzasz, że kupiłaś ten przedmiot? Tego nie można cofnąć."))return;const {error}=await sb.from("conversations").update({buyer_confirmed:true}).eq("id",cur);if(error)return toast("Sprzedająca musi najpierw odpisać w rozmowie");toast("Zakup potwierdzony");await load();openChat(cur)}};
+$("#msgBtn").onclick=()=>openChat();
+const AK={buy:["Zanim przejdziesz do płatności","Velvet Market to wyłącznie platforma ogłoszeniowa. <b>Nie pośredniczymy w sprzedaży</b>: nie przyjmujemy płatności, nie odpowiadamy za wysyłkę, towar ani spory. Umowę zawierasz bezpośrednio ze sprzedającą, na własne ryzyko. Płać metodą z ochroną kupującego (np. PayPal „towary i usługi”) i nie podawaj nikomu danych karty ani haseł."],sell:["Zanim opublikujesz ogłoszenie","Velvet Market to wyłącznie platforma ogłoszeniowa. <b>Nie pośredniczymy w sprzedaży</b>: nie przyjmujemy płatności, nie organizujemy wysyłki i nie rozstrzygamy sporów. Odpowiadasz za prawdziwość oferty, wysyłkę, rozliczenia z kupującą i podatki. Zabronione są treści z udziałem osób poniżej 18 lat."]};
+function ack(k){return new Promise(res=>{$("#aTt").textContent=AK[k][0];$("#aTx").innerHTML=AK[k][1];$("#aOk").checked=false;$("#mAck").classList.add("open");
+  $("#aGoOk").onclick=()=>{if(!$("#aOk").checked)return toast("Zaznacz akceptację regulaminu");$("#mAck").classList.remove("open");res(true)};
+  $("#aNo").onclick=()=>{$("#mAck").classList.remove("open");res(false)}})}
+$("#mAck").onclick=e=>e.stopPropagation();
+$("#mTerms").onclick=e=>{e.stopPropagation();if(e.target.id==="mTerms"||e.target.id==="tX")$("#mTerms").classList.remove("open")};
+document.addEventListener("click",e=>{if(e.target.classList&&e.target.classList.contains("tl")){e.preventDefault();$("#mTerms").classList.add("open")}},true);
+init();
+</script></body></html>
